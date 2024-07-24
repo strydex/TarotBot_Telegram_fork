@@ -26,6 +26,7 @@ from aiogram.filters import Command
 from aiogram import F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
+from aiogram.client.bot import Bot, DefaultBotProperties
 
 logging.basicConfig(level=logging.INFO)
 
@@ -156,7 +157,7 @@ async def add_new_admin(message: Message, bot: Bot, state: FSMContext):
 
 
 async def start():
-    bot = Bot(token=config.BOT_TOKEN, parse_mode='HTML')
+    bot = Bot(token=config.BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
     dp = Dispatcher()
 
     dp.startup.register(starting)
