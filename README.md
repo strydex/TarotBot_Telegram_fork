@@ -20,7 +20,7 @@ git clone https://github.com/yourusername/tarot-bot.git
 
 2. Create a new Python virtual environment and activate it:
 ```
-cd tarot-bot
+cd TarotBot_Telegram_fork
 python3 -m venv venv
 source venv/bin/activate
 ```
