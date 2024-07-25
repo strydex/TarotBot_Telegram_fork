@@ -24,9 +24,10 @@ source venv/bin/activate
 
 
 3. Install the required dependencies:
+'''
 pip3 install aiogram
 pip3 install openpyxl
-
+'''
 
 4. Create a `config.py` file in the project directory and add the following variables:
 
