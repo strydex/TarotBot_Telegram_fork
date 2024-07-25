@@ -18,6 +18,7 @@ from layouts import pick_love_card, wb, sheet
 from random import choices
 from cards import cards
 from fsm import AdminActions
+from markups import showChannels
 
 from aiogram.types import Message, ContentType, CallbackQuery
 from aiogram import Bot, Dispatcher, types
@@ -30,14 +31,11 @@ from aiogram.client.bot import Bot, DefaultBotProperties
 
 logging.basicConfig(level=logging.INFO)
 
-
 async def starting(bot: Bot):
     await set_commands(bot)
 
-
 async def get_photo(message: Message, bot: Bot):
     await message.answer(f'Отлично! Я получил фото.')
-
 
 async def get_layout(message: Message, bot: Bot):
     await bot.send_message(message.from_user.id,
@@ -45,7 +43,6 @@ async def get_layout(message: Message, bot: Bot):
                            reply_markup=select_type)
     json_str = json.dumps(message.model_dump(), default=str)
     print(json_str)
-
 
 async def buy_oracle_love(message: Message, bot: Bot):
     if int(await get_user_balance(message.from_user.id)) > 80:
@@ -56,14 +53,12 @@ async def buy_oracle_love(message: Message, bot: Bot):
         await bot.send_message(message.from_user.id,
                                f'У тебя недостаточно денег для оплаты(\nПополни баланс')
 
-
 async def get_balance(message: Message, bot: Bot):
     await bot.send_message(message.from_user.id,
                            f'<b>Твой баланс</b> ==<b> {await get_user_balance(message.from_user.id)} rub</b>\n<b>Твой id</b> ==<b> {message.from_user.id}</b>',
                            reply_markup=select_cash_in)
     json_str = json.dumps(message.model_dump(), default=str)
     print(json_str)
-
 
 async def buy_long_uni(message: Message, bot: Bot):
     if int(await get_user_balance(message.from_user.id)) > 65:
@@ -75,7 +70,6 @@ async def buy_long_uni(message: Message, bot: Bot):
         await bot.send_message(message.from_user.id,
                                f'У тебя недостаточно денег для оплаты(\nПополни баланс')
 
-
 async def buy_triple(message: Message, bot: Bot):
     if int(await get_user_balance(message.from_user.id)) > 45:
         await update_balance(us_id=message.from_user.id, cash=-45)
@@ -86,7 +80,6 @@ async def buy_triple(message: Message, bot: Bot):
         await bot.send_message(message.from_user.id,
                                f'У тебя недостаточно денег для оплаты(\nПополни баланс')
 
-
 async def buy_short_uni(message: Message, bot: Bot):
     if int(await get_user_balance(message.from_user.id)) > 40:
         await update_balance(us_id=message.from_user.id, cash=-40)
@@ -96,30 +89,48 @@ async def buy_short_uni(message: Message, bot: Bot):
     else:
         await bot.send_message(message.from_user.id,
                                f'У тебя недостаточно денег для оплаты(\nПополни баланс')
+        
+async def check_sub_channels(bot, channels, user_id):
+    for channel in channels:
+        try:
+            member = await bot.get_chat_member(chat_id=channel[1], user_id=user_id)
+            if member.status != 'member':
+                return False
+        except Exception as e:
+            logging.error(f"Error checking subscription: {e}")
+            return False
+    return True
 
 
 async def get_start(message: Message, bot: Bot):
-    await db_table_val(user_id=message.from_user.id, user_balance=100000)
-    if await get_user_admin(us_id=message.from_user.id) == 1:
-        await bot.send_message(message.from_user.id,
-                               f'<b>Привет, {message.from_user.first_name}!</b>\nВ этом боте ты можешь получить расклад на любую тему!',
-                               reply_markup=reply_keyboard_admin)
+    if not await check_sub_channels(bot, config.CHANNELS, message.from_user.id):
+        await bot.send_message(message.from_user.id, config.NOT_SUB_MESSAGE,
+                               reply_markup=showChannels())
     else:
+        await db_table_val(user_id=message.from_user.id, user_balance=100000)
         await bot.send_message(message.from_user.id,
                                f'<b>Привет, {message.from_user.first_name}!</b>\nВ этом боте ты можешь получить расклад на любую тему!',
                                reply_markup=reply_keyboard)
 
 
-async def admin_panel(message: Message, bot: Bot):
-    if await get_user_admin(us_id=message.from_user.id) == 1:
+async def subchanneldone(message: types.Message, bot: Bot):
+    await bot.delete_message(message.from_user.id, message.message.message_id)
+    if await check_sub_channels(bot, config.CHANNELS, message.from_user.id):
+        await db_table_val(user_id=message.from_user.id, user_balance=100000)
         await bot.send_message(message.from_user.id,
-                               f'Админ-панель',
-                               reply_markup=admin_panel_keyboard)
-        json_str = json.dumps(message.model_dump(), default=str)
-        print(json_str)
+                               f'<b>Привет, {message.from_user.first_name}!</b>\nВ этом боте ты можешь получить расклад на любую тему!',
+                               reply_markup=reply_keyboard)
     else:
-        await bot.send_message(message.from_user.id,
-                               f'Вы не являетесь администратором!')
+        await bot.send_message(message.from_user.id, config.NOT_SUB_MESSAGE,
+                               reply_markup=showChannels())
+
+async def admin_panel(message: Message, bot: Bot):
+    if not await get_user_admin(us_id=message.from_user.id) == 1:
+        await bot.send_message(message.from_user.id, 'Вы не являетесь администратором!')
+        return
+    await bot.send_message(message.from_user.id,
+                             f'Админ-панель',
+                             reply_markup=admin_panel_keyboard)
 
 
 async def change_balance(message: Message, bot: Bot, state: FSMContext):
@@ -140,7 +151,6 @@ async def change_balance(message: Message, bot: Bot, state: FSMContext):
         json_str = json.dumps(message.model_dump(), default=str)
         print(json_str)
 
-
 async def add_new_admin(message: Message, bot: Bot, state: FSMContext):
     try:
         await add_admin(int(message.text))
@@ -154,7 +164,6 @@ async def add_new_admin(message: Message, bot: Bot, state: FSMContext):
                                reply_markup=admin_panel_keyboard)
         json_str = json.dumps(message.model_dump(), default=str)
         print(json_str)
-
 
 async def start():
     bot = Bot(token=config.BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
@@ -178,11 +187,12 @@ async def start():
     dp.message.register(admin_panel, F.text == 'Админ-панель')
     dp.message.register(change_balance, StateFilter(AdminActions.change_balance))
     dp.message.register(add_new_admin, StateFilter(AdminActions.add_admin))
+    dp.callback_query.register(subchanneldone, F.data == 'subchanneldone')
+
     try:
         await dp.start_polling(bot)
     finally:
         await bot.session.close()
-
 
 if __name__ == '__main__':
     asyncio.run(start())
