@@ -14,20 +14,22 @@ A Telegram bot for receiving tarot card layouts, written using aiogram3.
 ### Steps
 
 1. Clone the repository to your VPS server:
+```
 git clone https://github.com/yourusername/tarot-bot.git
-
+```
 
 2. Create a new Python virtual environment and activate it:
+```
 cd tarot-bot
 python3 -m venv venv
 source venv/bin/activate
-
+```
 
 3. Install the required dependencies:
-'''
+```
 pip3 install aiogram
 pip3 install openpyxl
-'''
+```
 
 4. Create a `config.py` file in the project directory and add the following variables:
 
@@ -36,8 +38,9 @@ pip3 install openpyxl
 - `CHANNELS`: a list of your Telegram channels that users must subscribe to in order to use the bot
 
 5. Start the bot:
+```
 python3 main.py
-
+```
 
 ## Usage
 
