@@ -18,7 +18,7 @@ from layouts import pick_love_card, wb, sheet
 from random import choices
 from cards import cards
 from fsm import AdminActions
-from markups import showChannels
+from markups import showChannels, subchannel_done_message
 
 from aiogram.types import Message, ContentType, CallbackQuery
 from aiogram import Bot, Dispatcher, types
@@ -109,20 +109,23 @@ async def get_start(message: Message, bot: Bot):
     else:
         await db_table_val(user_id=message.from_user.id, user_balance=100000)
         await bot.send_message(message.from_user.id,
-                               f'<b>Привет, {message.from_user.first_name}!</b>\nВ этом боте ты можешь получить расклад на любую тему!',
+                               f'<b>Привет, {message.from_user.first_name}!</b>\nДавай сделаем тебе расклад! У тебя на балансе 100.000 Таро-рублей, благодаря каналам-спонсорам.',
                                reply_markup=reply_keyboard)
 
 
-async def subchanneldone(message: types.Message, bot: Bot):
-    await bot.delete_message(message.from_user.id, message.message.message_id)
-    if await check_sub_channels(bot, config.CHANNELS, message.from_user.id):
-        await db_table_val(user_id=message.from_user.id, user_balance=100000)
-        await bot.send_message(message.from_user.id,
-                               f'<b>Привет, {message.from_user.first_name}!</b>\nВ этом боте ты можешь получить расклад на любую тему!',
-                               reply_markup=reply_keyboard)
+async def subchanneldone(callback: CallbackQuery, bot: Bot):
+    await callback.answer()
+    if await check_sub_channels(bot, config.CHANNELS, callback.from_user.id):
+        await bot.send_message(callback.from_user.id, 
+            f'<b>Привет, {callback.from_user.first_name}!</b>\nДавай сделаем тебе расклад!', 
+            reply_markup=reply_keyboard)
     else:
-        await bot.send_message(message.from_user.id, config.NOT_SUB_MESSAGE,
-                               reply_markup=showChannels())
+        await bot.send_message(callback.from_user.id, config.NOT_SUB_MESSAGE, 
+            reply_markup=showChannels())
+    # Restart the bot conversation by sending the /start command
+    await bot.send_message(callback.from_user.id, '/start')
+
+
 
 async def admin_panel(message: Message, bot: Bot):
     if not await get_user_admin(us_id=message.from_user.id) == 1:
