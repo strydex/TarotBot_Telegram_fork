@@ -1,4 +1,4 @@
- Tarot Bot
+# Tarot Bot
 
 A Telegram bot for receiving tarot card layouts, written using aiogram3.
 
