@@ -2,7 +2,6 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 from config import CHANNELS
 
 btnProfile = KeyboardButton(text='ПРОФИЛЬ')
-
 keyboard_buttons = [[btnProfile]]
 profileKeyboard = ReplyKeyboardMarkup(keyboard=keyboard_buttons, resize_keyboard=True)
 
@@ -16,3 +15,5 @@ def showChannels():
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[btn] for btn in buttons])
     return keyboard
 
+def subchannel_done_message():
+    return "Спасибо, что подписались на наших спонсоров. Теперь вы можете использовать полный функционал бота, у вас на балансе 100.000 условных рублей"
